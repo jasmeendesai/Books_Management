@@ -1,19 +1,23 @@
-// ## Review APIs
-// ### POST /books/:bookId/review
-// - Add a review for the book in reviews collection.
-// - Check if the bookId exists and is not deleted before adding the review. Send an error response with appropirate status code like [this](#error-response-structure) if the book does not exist
-// - Get review details like review, rating, reviewer's name in request body.
-// - Update the related book document by increasing its review count
-// - Return the updated book document with reviews data on successful operation. The response body should be in the form of JSON object like [this](#Review-Response-Structure)
-
 const reviewModel = require('../model/reviewModel')
 const bookModel = require('../model/bookModel');
 
 const createReview = async function (req, res) {
     try {
         const bookId = req.params.bookId
-
         const data = req.body
+        const {reviewedBy,rating,review} = data
+
+        if (!validator.isValidRequestBody(data)) {
+            return res.status(400).send({ status: false, message: "Enter data in body" })
+        }
+
+        // bookId: {ObjectId, mandatory, refs to book model},
+        if (!bookId) {
+            return res.status(400).send({ status: false, message: "bookId is required" })
+        }
+        if (!validator.isValidObjectId(bookId)) {
+            return res.status(400).send({ status: false, message: "bookId is not a valid Object Id" })
+        }
         const bookData = await bookModel.findById(bookId)
 
         if(!bookData){
@@ -22,7 +26,32 @@ const createReview = async function (req, res) {
         if(bookData.isDeleted){
             return res.status(404).send({ status: false, message: "Book has been already deleted" })
         }
+        data.bookId = bookId
 
+        // reviewedBy: {string, mandatory, default 'Guest', value: reviewer's name},
+        if (!reviewedBy) {
+            return res.status(400).send({ status: false, message: "reviewedBy is required" })
+        }
+
+        if (!validator.isValid(reviewedBy)) {
+            return res.status(400).send({ status: false, message: "enter valid reviewedBy" })
+        }
+        
+        // rating: {number, min 1, max 5, mandatory},
+        if (!rating) {
+            return res.status(400).send({ status: false, message: "rating is required" })
+        }
+
+        if (typeof rating !== "number" || rating > 5) {
+            return res.status(400).send({ status: false, message: "enter valid reviews" })
+        }
+        
+        // review: {string, optional}
+        if (!validator.isValid(review)) {
+            return res.status(400).send({ status: false, message: "enter valid review" })
+        }
+
+        data.reviewedAt = new Date()
         const createdata = await reviewModel.create(data)
 
         const updateBook = await bookModel.findOneAndUpdate({_id : bookId}, {$inc : {reviews :1}},{new : true})
@@ -40,19 +69,22 @@ const createReview = async function (req, res) {
 }
 
 
-
-// ### PUT /books/:bookId/review/:reviewId
-// - Update the review - review, rating, reviewer's name.
-// - Check if the bookId exists and is not deleted before updating the review. Check if the review exist before updating the review. Send an error response with appropirate status code like [this](#error-response-structure) if the book does not exist
-// - Get review details like review, rating, reviewer's name in request body.
-// - Return the updated book document with reviews data on successful operation. The response body should be in the form of JSON object like [this](#book-details-response)
-
 const updateReview = async function (req, res) {
     try {
         const params = req.params
         const {bookId, reviewId} = params
 
         const data = req.body
+        const {review, rating, reviewedBy} = data
+        if (!validator.isValidRequestBody(data)) {
+            return res.status(400).send({ status: false, message: "Enter data in body" })
+        }
+
+        //bookId validation
+        if (!validator.isValidObjectId(bookId)) {
+            return res.status(400).send({ status: false, message: "bookId is not a valid Object Id" })
+        }
+
         const bookData = await bookModel.findById(bookId)
 
         if(!bookData){
@@ -62,6 +94,10 @@ const updateReview = async function (req, res) {
             return res.status(404).send({ status: false, message: "Book has been already deleted" })
         }
 
+        //reviewId validation
+        if (!validator.isValidObjectId(reviewId)) {
+            return res.status(400).send({ status: false, message: "reviewId is not a valid Object Id" })
+        }
         const reviewData = await reviewModel.findById(reviewId)
 
         if(!reviewData){
@@ -70,6 +106,23 @@ const updateReview = async function (req, res) {
 
         if(reviewData.isDeleted){
             return res.status(404).send({ status: false, message: "Book has been already deleted" })
+        }
+
+        //review validation
+        if(review){
+            if(!isValid(review)) return res.status(400).send({status: false,
+                message: "Please provide valid review for this book"})
+        }
+        //rating validation
+        if(rating){
+            if (typeof rating !== "number" || rating > 5) {
+                return res.status(400).send({ status: false, message: "enter valid reviews" })
+            }
+        }
+        // reviewedBy validation
+        if(reviewedBy){
+            if(!isValid(reviewedBy)) return res.status(400).send({status: false,
+                message: "Please provide valid name "})
         }
 
         await reviewModel.findOneAndUpdate({_id : reviewId},data,{new : true})
@@ -86,16 +139,15 @@ const updateReview = async function (req, res) {
 }
 
 
-// ### DELETE /books/:bookId/review/:reviewId
-// - Check if the review exist with the reviewId. Check if the book exist with the bookId. Send an error response with appropirate status code like [this](#error-response-structure) if the book or book review does not exist
-// - Delete the related reivew.
-// - Update the books document - decrease review count by one
-
 const deleteReview = async function (req, res) {
     try {
         const params = req.params
         const {bookId, reviewId} = params
 
+        //bookId validation
+        if (!validator.isValidObjectId(bookId)) {
+            return res.status(400).send({ status: false, message: "bookId is not a valid Object Id" })
+        }
         const bookData = await bookModel.findById(bookId)
 
         if(!bookData){
@@ -105,6 +157,10 @@ const deleteReview = async function (req, res) {
             return res.status(404).send({ status: false, message: "Book has been already deleted" })
         }
 
+        //reviewId validation
+        if (!validator.isValidObjectId(reviewId)) {
+            return res.status(400).send({ status: false, message: "reviewId is not a valid Object Id" })
+        }
         const reviewData = await reviewModel.findById(reviewId)
 
         if(!reviewData){

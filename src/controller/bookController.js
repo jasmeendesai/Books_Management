@@ -78,12 +78,7 @@ const createBook = async function (req, res) {
         if (!validator.isValid(subcategory)) {
             return res.status(400).send({ status: false, message: "enter valid subcategory" })
         }
-
-        //     reviews: {number, default: 0, comment: Holds number of reviews of this book},
-
-        if (typeof reviews !== "number" || reviews <= 5) {
-            return res.status(400).send({ status: false, message: "enter valid reviews" })
-        }
+     
 
         //     releasedAt: {Date, mandatory, format("YYYY-MM-DD")},
         if (!releasedAt) {

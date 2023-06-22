@@ -9,6 +9,8 @@ const reviewController = require('../controller/reviewController')
 
 const {Authentication,Authorisation} = require('../middleware/middleware')
 
+//================================================
+
 //User Api
 // POST /register
 router.post('/register', userController.registerUser)
@@ -16,6 +18,7 @@ router.post('/register', userController.registerUser)
 // POST /login
 router.post('/login', userController.userLogin)
 
+//========================================================
 
 // Books API
 // POST /books
@@ -33,6 +36,7 @@ router.put('/books/:bookId',Authentication,Authorisation,bookController.updateBo
 // DELETE /books/:bookId
 router.delete('/books/:bookId',Authentication,Authorisation,bookController.deleteBookById)
 
+//==============================================================
 
 // Review APIs
 // POST /books/:bookId/review
@@ -44,7 +48,7 @@ router.put('/books/:bookId/review/:reviewId',reviewController.updateReview)
 // DELETE /books/:bookId/review/:reviewId
 router.delete('/books/:bookId/review/:reviewId',reviewController.deleteReview)
 
-
+//==============================================================================
 router.use('*',(req, res) =>{
     res.status(400).send("Invalid url request");
 })
