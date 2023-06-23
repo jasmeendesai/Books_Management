@@ -15,7 +15,7 @@ const registerUser = async function (req, res) {
         }
 
         // title: {string, mandatory, enum[Mr, Mrs, Miss]}
-        let enm =[Mr, Mrs, Miss]
+        let enm =["Mr", "Mrs", "Miss"]
         if(!title){
             return res.status(400).send({ status: false, message : "title is required" })
         }
@@ -35,11 +35,11 @@ const registerUser = async function (req, res) {
 
         //   phone: {string, mandatory, unique},
         if(!phone){
-            return res.status(400).send({ status: false, message : "phone is required" })
+            return res.status(400).send({ status: false, message : "phone Number is required" })
         }
 
         if(!validator.isValid(phone) || !validator.isValidMobileNum(phone)){
-            return res.status(400).send({status: false, message : "enter valid phone"})
+            return res.status(400).send({status: false, message : "enter valid phone Number"})
         }
 
         const phoneNum = await userModel.findOne({phone : phone})
