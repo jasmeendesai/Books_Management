@@ -1,5 +1,6 @@
 const reviewModel = require('../model/reviewModel')
 const bookModel = require('../model/bookModel');
+const validator = require('../util/validator')
 
 const createReview = async function (req, res) {
     try {
@@ -105,12 +106,12 @@ const updateReview = async function (req, res) {
         }
 
         if(reviewData.isDeleted){
-            return res.status(404).send({ status: false, message: "Book has been already deleted" })
+            return res.status(404).send({ status: false, message: "review has been already deleted" })
         }
 
         //review validation
         if(review){
-            if(!isValid(review)) return res.status(400).send({status: false,
+            if(!validator.isValid(review)) return res.status(400).send({status: false,
                 message: "Please provide valid review for this book"})
         }
         //rating validation
@@ -121,7 +122,7 @@ const updateReview = async function (req, res) {
         }
         // reviewedBy validation
         if(reviewedBy){
-            if(!isValid(reviewedBy)) return res.status(400).send({status: false,
+            if(!validator.isValid(reviewedBy)) return res.status(400).send({status: false,
                 message: "Please provide valid name "})
         }
 

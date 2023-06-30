@@ -2,7 +2,23 @@ const bookModel = require('../model/bookModel');
 const userModel = require('../model/userModel');
 const reviewModel = require('../model/reviewModel')
 const validator = require('../util/validator')
+const {uploadFile} = require('../aws/awsUrl')
 
+const createUrl = async function(req, res){
+    try{
+        let files = req.files
+   
+        if(files.length===0){
+            return res.status(400).send({status : false, message : "No file found"})
+        }
+        console.log(files[0])
+        let uploadedFiles = await uploadFile(files[0])
+        
+        return res.status(200).send({status : true, data : uploadedFiles })
+    }catch(error){
+        return res.status(500).send({status : false, message : error.message})
+    }
+}
 
 const createBook = async function (req, res) {
     try {
@@ -11,7 +27,8 @@ const createBook = async function (req, res) {
 
         const { title, excerpt, userId, ISBN, category, subcategory, reviews, releasedAt } = bookData
 
-        if (!validator.isValidRequestBody(userData)) {
+
+        if (!validator.isValidRequestBody(bookData)) {
             return res.status(400).send({ status: false, message: "Enter data in body" })
         }
 
@@ -26,7 +43,7 @@ const createBook = async function (req, res) {
         }
 
         const istitle = await bookModel.findOne({ title: title })
-        if (!istitle) {
+        if (istitle) {
             return res.status(400).send({ status: false, message: "title is already present" })
         }
 
@@ -57,7 +74,7 @@ const createBook = async function (req, res) {
         }
 
         const isISBN = await bookModel.findOne({ ISBN: ISBN })
-        if (!isISBN) {
+        if (isISBN) {
             return res.status(400).send({ status: false, message: "ISBN is already present" })
         }
 
@@ -89,28 +106,21 @@ const createBook = async function (req, res) {
             return res.status(400).send({ status: false, message: "enter valid release date" })
         }
 
-
-        let userLoggedin = req.decodedToken
-        const userToBeModified = userId
-
-        if (userToBeModified !== userLoggedin) {
-            return res.status(403).send({ status: false, message: "Unauthorised user" })
-        }
-
         const user = await userModel.findById(userId);
         if (!user) {
             return res.status(404).send({ status: false, message: "User is not found" })
         }
+        
         const createBook = await bookModel.create(bookData)
 
         const { __v, ...book } = createBook._doc
 
         return res.status(201).send({ status: true, data: book })
     } catch (error) {
+         
         return res.status(500).send({ status: false, message: error.message })
     }
 }
-
 
 const getBookByQuery = async function (req, res) {
     try {
@@ -179,7 +189,7 @@ const updateBookById = async function (req, res) {
                 return res.status(400).send({ status: false, message: "enter valid title" })
             }
             const istitle = await bookModel.findOne({ title: title })
-            if (!istitle) {
+            if (istitle) {
                 return res.status(400).send({ status: false, message: "title is already present" })
             }
         }
@@ -208,7 +218,7 @@ const updateBookById = async function (req, res) {
         }
 
         const isISBN = await bookModel.findOne({ ISBN: ISBN })
-        if (!isISBN) {
+        if (isISBN) {
             return res.status(400).send({ status: false, message: "ISBN is already present" })
         }
 
@@ -248,9 +258,9 @@ const deleteBookById = async function (req, res) {
             return res.status(404).send({ status: false, message: "Book has been already deleted" })
         }
 
-        await bookModel.findOneAndUpdate({ _id: bookId }, { isDeleted: true, deletedAt: new Date() }, { new: true })
+        await bookModel.findOneAndUpdate({ _id: bookId }, { isDeleted: true, deletedAt: new Date() })
 
-        return res.status(200).send({ status: true, message: "The has been deleted successfully" })
+        return res.status(200).send({ status: true, message: "The book has been deleted successfully" })
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message })
     }
@@ -258,4 +268,4 @@ const deleteBookById = async function (req, res) {
 
 
 
-module.exports = { createBook, getBookByQuery, getBookById, updateBookById, deleteBookById }
+module.exports = { createBook, getBookByQuery, getBookById, updateBookById, deleteBookById, createUrl }

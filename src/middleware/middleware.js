@@ -7,7 +7,7 @@ const Authentication = async function(req, res, next){
     try{
         let token = req.headers["x-api-key"];
         if(!token){
-            return res.status(400).send({status : false, message : "token is missing"})
+            return res.status(401).send({status : false, message : "token is missing"})
         }
         let decodeToken = jwt.verify(token, SECRET_KEY);
         req.decodedToken = decodeToken.userId

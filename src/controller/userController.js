@@ -85,34 +85,37 @@ const registerUser = async function (req, res) {
 
 const userLogin = async function (req, res) {
     try {
-        const userCredential = req.body;
-        const {email, password} = userCredential
-
-        //   email: {string, mandatory, valid email, unique}, 
-        if(!email){
-            return res.status(400).send({ status: false, message : "email is required" })
-        }
-
-        if(!validator.isValid(email) || !validator.isValidEmail(email)){
-            return res.status(400).send({status: false, message : "enter valid email"})
-        }
-
-        //   password: {string, mandatory, minLen 8, maxLen 15},
-        if(!password){
-            return res.status(400).send({ status: false, message : "password is required" })
-        }
-
-        if(!validator.isValid(password) || password.length<8 || password.length>15){
-            return res.status(400).send({status: false, message : "enter valid password"})
-        }
-
-        const validUser = await userModel.findOne({email : email, password : password})
-        if(!validUser){
-            return res.status(401).send({ status: true, message : "Enter valid user credentials, email or password is wrong" })
-        }
-        const token = jwt.sign({userId : validUser._id, exp : 864000000000},SECRET_KEY)
-
-        return res.status(200).send({ status: true, token : token })
+        if (!validator.isValidRequestBody(req.body)) {
+            return res.status(400).send({ status: false, message: "No data is present in body" });
+          }
+          const { email, password } = req.body;
+      
+          if (!email || !password) {
+            return res.status(400).send({ status: false, message: "Please enter email and password" });
+          }
+      
+          if (!validator.isValid(email) || !validator.isValidEmail(email)) {
+            return res.status(400).send({ status: false, message: "Enter a valid email" });
+          }
+      
+          if (!validator.isValid(password)) {
+            return res.status(400).send({ status: false, message: "Enter a valid password" });
+          }
+      
+          const userDetail = await userModel.findOne({ email: email, password: password });
+          if (!userDetail) {
+            return res.status(401).send({ status: false, message: "username or the password is not correct" })
+          }
+      
+          //generate token
+      
+          if (userDetail) {
+            const token = jwt.sign({ userId: userDetail._id, exp: 7560606060 }, SECRET_KEY)
+      
+            return res.status(200).send({ status: true, data: { token: token } })
+          } else {
+            return res.status(401).send({ status: false, message: "not a authenticate user" })
+          }
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message })
     }
